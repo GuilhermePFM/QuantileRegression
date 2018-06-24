@@ -1,3 +1,6 @@
 [submodule "Simplex"]
 	path = Simplex
 	url = ../Simplex.git
+[submodule "interiorpoints"]
+	path = interiorpoints
+	url = ../interiorpoints.git
