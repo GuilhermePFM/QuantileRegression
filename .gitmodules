@@ -1,0 +1,3 @@
+[submodule "Simplex"]
+	path = Simplex
+	url = ../Simplex.git
