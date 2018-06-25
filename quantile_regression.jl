@@ -31,6 +31,69 @@ function build_problem(θ)
     return m 
 end
 
+function QAR_problem(τ, Y, X)
+    q = τ
+    
+    # Y = x * β - ϵ 
+    # ϵ = Y - x * β
+    # estimador para β:
+    # βe = argmin (Σρ*(Y - x * β))
+    n_amostras = size(Y)[1]
+    n_AR = 1
+    
+    m = Model(solver = ClpSolver())
+    @variable(m,  β[1:(n_AR + 1)] )
+
+    # positive epsilon
+    @variable(m,  u[1:n_amostras] >= 0 )
+    # negative epsilon
+    @variable(m,  v[1:n_amostras] >= 0 )
+    @constraint(m,  [i = 1:n_amostras], u[i] - v[i] == Y[i] - X[i] * β[2] - β[1]) #sum(x[i,j]* β[j] for j in 1:n_AR)
+
+    
+    @objective(m, Min, sum( q*u[i] + (1-q)*v[i] for i in 1:n_amostras))
+    
+    status = solve(m)
+    
+    println("β = ", getvalue(β))
+    println("age = ", getvalue(β)[4])
+    println("u = ", getvalue(u))
+    println("v = ", getvalue(v))
+    
+    #print(m)
+    JuMP.build(m)
+
+    return m 
+end
+
+function quantile_problem(τ, Y, X)
+    q = τ
+    
+    # Y = x * β - ϵ 
+    # ϵ = Y - x * β
+    # estimador para β:
+    # βe = argmin (Σρ*(Y - x * β))
+    n_amostras = size(Y)[1]
+    n_AR = 1
+    
+    m = Model(solver = ClpSolver())
+    @variable(m,  β[1:n_AR] )
+
+    # positive epsilon
+    @variable(m,  u[1:n_amostras] >= 0 )
+    # negative epsilon
+    @variable(m,  v[1:n_amostras] >= 0 )
+    @constraint(m,  [i = 1:n_amostras], u[i] - v[i] == Y[i] - X[i] * β[1]) #sum(x[i,j]* β[j] for j in 1:n_AR)
+
+    
+    @objective(m, Min, sum( q*u[i] + (1-q)*v[i] for i in 1:n_amostras))
+    
+    #print(m)
+    JuMP.build(m)
+
+    return m 
+end
+
 function check_function(Y, x, q)
     if Y - x < 0
         return (1 - q)
@@ -131,8 +194,8 @@ function test_quantile()
     n_amostras = size(df)[1]
     names(df)
     Y = df[:totexp]
-    X = Matrix(df[:,3:end])
-    x_anos = x[:,4]
+    X = df[:age]
+    x_anos = X
     q = 0.25
     
     # Y = x * β - ϵ 
@@ -149,7 +212,7 @@ function test_quantile()
     @variable(m,  u[1:n_amostras] >= 0 )
     # negative epsilon
     @variable(m,  v[1:n_amostras] >= 0 )
-    @constraint(m,  [i = 1:n_amostras], u[i] - v[i] == Y[i] -  x_anos[i]* β[1]) #sum(x[i,j]* β[j] for j in 1:n_AR)
+    @constraint(m,  [i = 1:n_amostras], u[i] - v[i] == Y[i] - X[i] * β[1]) #sum(x[i,j]* β[j] for j in 1:n_AR)
 
     
     @objective(m, Min, sum( q*u[i] + (1-q)*v[i] for i in 1:n_amostras))
@@ -158,6 +221,8 @@ function test_quantile()
     
     println("β = ", getvalue(β))
     println("age = ", getvalue(β)[4])
+    println("u = ", getvalue(u))
+    println("v = ", getvalue(v))
     
     print(m)
     # JuMP.build(m)
@@ -175,17 +240,15 @@ function test_quantile_bobo()
     # ϵ = Y - x * β
     # estimador para β:
     # βe = argmin (Σρ*(Y - x * β))
-    n_usinas = 1
-    n_AR = 1
     
     m = Model(solver = ClpSolver())
-    @variable(m,  β[1:n_AR] )
+    @variable(m,  β[1:1] )
 
     # positive epsilon
     @variable(m,  u[1:n_amostras] >= 0 )
     # negative epsilon
     @variable(m,  v[1:n_amostras] >= 0 )
-    @constraint(m,  [i = 1:n_amostras], u[i] - v[i] == Y[i] -  x[i]* β[1]) #sum(x[i,j]* β[j] for j in 1:n_AR)
+    @constraint(m,  [i = 1:n_amostras], u[i] - v[i] == Y[i] -  3) #sum(x[i,j]* β[j] for j in 1:n_AR)
 
     
     @objective(m, Min, sum( q*u[i] + (1-q)*v[i] for i in 1:n_amostras))
@@ -193,6 +256,8 @@ function test_quantile_bobo()
     status = solve(m)
     
     println("β = ", getvalue(β))
+    println("u = ", getvalue(u))
+    println("v = ", getvalue(v))
     println("age = ", getvalue(β)[4])
     
     print(m)
