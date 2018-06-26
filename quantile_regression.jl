@@ -116,6 +116,7 @@ function benchmark(m::JuMP.Model)
     x_jmp = getvalue(getvariable(m, :β))
     u_jmp = getvalue(getvariable(m, :u))
     v_jmp = getvalue(getvariable(m, :v))
+    writeLP(m, "m.lp", genericnames=false)
     x_jmp2= [x_jmp; u_jmp; v_jmp]
 
     # solve with Simplex
@@ -145,9 +146,9 @@ end
 
 function solve_simplex(A, b, c)
     tic()
-    A = [A eye(size(A)[1])]
-    c = -[c; zeros(size(A)[1])]
-    x, z, status, it = Simplex(A, b, c, false)
+    # A = [A eye(size(A)[1])]
+    # c = -[c; zeros(size(A)[1])]
+    x, z, status, it = Simplex(A, b, -c, true)
     time = toc()
 
     return z, x, status, time, it 
@@ -156,7 +157,7 @@ end
 function solve_interior_points(A, b, c)
 
     tic()
-    x, p, s, status, it = interior_points(A, b, c, false)
+    x, p, s, status, it = interior_points(A, b, c, true)
     time = toc()
 
     return c'*x, x, status, time, it 
@@ -188,16 +189,16 @@ function exemple_problem()
 end
 
 function test_jq()
-    q = τ
+    q = 0.25
     
-    x = collect(1:3)
-    Y = 10*x + rand()
+    n_AR = 1
+    X = collect(1:2)
+    Y = 10*X + rand()
     # Y = x * β - ϵ 
     # ϵ = Y - x * β
     # estimador para β:
     # βe = argmin (Σρ*(Y - x * β))
     n_amostras = size(Y)[1]
-    n_AR = 1
     
     m = Model(solver = ClpSolver())
     @variable(m,  β[1:n_AR] )
@@ -222,8 +223,10 @@ function test_jq()
 
 
     A, b, c = extract_problem(m)
+    z_smp, x_smp, status_smp, time_smp, it_smp  = solve_simplex(A, b, c) 
     z_int, x_int, status_int, time_int, it_int  = solve_interior_points(A, b, c)
-
+    A*x_int
+    b
 end
 
 function test_quantile()
