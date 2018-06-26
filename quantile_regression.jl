@@ -6,28 +6,20 @@ include(joinpath(pwd(), "interiorpoints", "interiorpoints.jl" ))
 using DataFrames
 
 function quantile_regression()
-    θ = 0.5
-    m = build_problem(θ)
+    τ = 0.25
+    m = build_problem(τ)
     benchmark(m)
 end
 
-function build_problem(θ)
-    m = Model(solver = ClpSolver())
+function build_problem(τ, Y, X)
+    df = readtable("quantile_health.csv")
+    n_amostras = 2#size(df)[1]
+    names(df)
+    Y = df[:totexp]
+    X = df[:age]
 
-    # Y = x * β - ϵ 
-    # ϵ = Y - x * β
-    # estimador para β:
-    # βe = argmin (Σρ*(Y - x * β))
-    n_amostras = 10
-    n_usinas = 1
-    n_AR = 2
-
-    @variable(m,  β[1:n_AR] >= 0 )
-
-    @objective(m, Min, sum(check_function(Y[i], x[i], β) * abs(Y[i] - x[i]) for i in 1:n_amostras))
+    m = quantile_problem(τ, Y, X)
     
-    JuMP.build(m)
-
     return m 
 end
 
@@ -73,7 +65,7 @@ function quantile_problem(τ, Y, X)
     # ϵ = Y - x * β
     # estimador para β:
     # βe = argmin (Σρ*(Y - x * β))
-    n_amostras = size(Y)[1]
+    n_amostras = 5#size(Y)[1]
     n_AR = 1
     
     m = Model(solver = ClpSolver())
@@ -120,13 +112,17 @@ function benchmark(m::JuMP.Model)
     A, b, c = extract_problem(m)
 
     # solve with JuMP
-    z, status, time = solve_jump(m)
+    z_jmp, status_jmp, time_jmp = solve_jump(m)
+    x_jmp = getvalue(getvariable(m, :β))
+    u_jmp = getvalue(getvariable(m, :u))
+    v_jmp = getvalue(getvariable(m, :v))
+    x_jmp2= [x_jmp; u_jmp; v_jmp]
 
     # solve with Simplex
-    z, x, status, time, it  = solve_simplex(A, b, c) # Simplex works only with max
+    z_smp, x_smp, status_smp, time_smp, it_smp  = solve_simplex(A, b, c) # Simplex works only with max
 
     # solve with Interior Points
-    z, x, status, time, it  = solve_interior_points(A, b, c)
+    z_int, x_int, status_int, time_int, it_int  = solve_interior_points(A, b, c)
 
 end
 
@@ -149,7 +145,9 @@ end
 
 function solve_simplex(A, b, c)
     tic()
-    x, z, status, it = Simplex(A, b, c)
+    A = [A eye(size(A)[1])]
+    c = -[c; zeros(size(A)[1])]
+    x, z, status, it = Simplex(A, b, c, false)
     time = toc()
 
     return z, x, status, time, it 
@@ -158,10 +156,10 @@ end
 function solve_interior_points(A, b, c)
 
     tic()
-    x, z, status, it = interior_points(A, b, c)
+    x, p, s, status, it = interior_points(A, b, c, false)
     time = toc()
 
-    return z, x, status, time, it 
+    return c'*x, x, status, time, it 
 end
 
 function exemple_problem()
@@ -187,6 +185,45 @@ function exemple_problem()
     println("Objective value: ", getobjectivevalue(m))
     println("x = ", getvalue(x))
     println("y = ", getvalue(y))
+end
+
+function test_jq()
+    q = τ
+    
+    x = collect(1:3)
+    Y = 10*x + rand()
+    # Y = x * β - ϵ 
+    # ϵ = Y - x * β
+    # estimador para β:
+    # βe = argmin (Σρ*(Y - x * β))
+    n_amostras = size(Y)[1]
+    n_AR = 1
+    
+    m = Model(solver = ClpSolver())
+    @variable(m,  β[1:n_AR] )
+
+    # positive epsilon
+    @variable(m,  u[1:n_amostras] >= 0 )
+    # negative epsilon
+    @variable(m,  v[1:n_amostras] >= 0 )
+    @constraint(m,  [i = 1:n_amostras], u[i] - v[i] == Y[i] - X[i] * β[1]) #sum(x[i,j]* β[j] for j in 1:n_AR)
+
+    
+    @objective(m, Min, sum( q*u[i] + (1-q)*v[i] for i in 1:n_amostras))
+    
+    #print(m)
+    JuMP.build(m)
+
+    z_jmp, status_jmp, time_jmp = solve_jump(m)
+    x_jmp = getvalue(getvariable(m, :β))
+    u_jmp = getvalue(getvariable(m, :u))
+    v_jmp = getvalue(getvariable(m, :v))
+    x_jmp2= [x_jmp; u_jmp; v_jmp]
+
+
+    A, b, c = extract_problem(m)
+    z_int, x_int, status_int, time_int, it_int  = solve_interior_points(A, b, c)
+
 end
 
 function test_quantile()
