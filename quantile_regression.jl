@@ -17,10 +17,10 @@ function quantile_regression()
     n_amostra = 10
 
     # Health
-    df = readtable("quantile_health.csv")
-    names(df)
-    Y = df[:totexp]
-    X = df[:age]
+    # df = readtable("quantile_health.csv")
+    # names(df)
+    # Y = df[:totexp]
+    # X = df[:age]
 
 
     # Eolica
@@ -123,7 +123,18 @@ function quantile_problem(τ, Y, X, n_amostras, n_AR = 1)
     return m 
 end
 
-function MRE_problem(GF, GSF, Ger_disp, P_vend, Q_vend, Q_disp, PLD, P_fixo, CVU)
+function MRE_read()
+    P_op_exer = readtable("EXERCICIO.csv")[:,2:end]
+    GSF = readtable("GSF.csv")[:,2:end]
+    Op = readtable("OPCAO.csv")[:,2:end]
+    P_op_premio = Op[1,:]
+    Q_op = Op[2,:]
+    PLD = readtable("PLD.csv")[:,2:end]
+    
+    return GSF, P_op_premio, P_op_exer, Q_op, PLD
+end
+
+function MRE_problem(Ger_op, GSF, P_op_premio, P_op_exer, Q_op, PLD)
     # Premissas
     # GSF : varia por estagio
     # GF : cte
@@ -134,37 +145,52 @@ function MRE_problem(GF, GSF, Ger_disp, P_vend, Q_vend, Q_disp, PLD, P_fixo, CVU
     # PLD : varia por estagio
     # P_fixo : varia por estagio e por agente
     # CVU : varia por agente
-
-    # numero de agentes
-    AG = size(GSF)[2]
     
-    # numero de etapas
-    T = size(GSF)[1]
-    
-    # numero de contratos
-    #C = size(Q_disp)[2]
+    # Contrato
+    GF = 100
+    Q_cont0 = 100
+    P_cont = 180
+   
+    #    Q_op = [50 50]
+    # P_op_premio = [10 20]
+    # P_op_exer = [200 170]
+    # Ger_op = [[50; 50; 0; 0; 0] [50; 50; 0; 0; 0]]
+    n_op = size(P_op_premio)[2]
+   
+    # GSF = [0.8; 0.85; 0.9; 0.95; 1.]
+    # PLD = [250; 150; 110; 75; 50]
+    n_cen = size(GSF)[2]
+    t = size(GSF)[1]
 
 
-    m = Model(solver = ClpSolver())
-    
-    # variaveis de decisao 
-    @variable(m, 0 <= a_disp[t=1:T, ag=1:AG] <= 0.05 )
-    @variable(m, 0 <= C_red <= 0.05 * Q_vend)
-    
-    # restricoes
+    decisao = Model(solver = ClpSolver())
+    @variable(decisao, a[1:t,1:n_op] >= 0 )
+    @variable(decisao, Q_red >= 0 )
 
-    # montante disponivel
-    @constraint(m,  MontDisp[t=1:T], 0 <= sum(a_disp[t, :]) <= 0.1)
-    
-    # balanco do contrato
-    @constraint(m,  BalCont[t=1:T] , Q_vend - C_red <= GF[ag] +  sum(a_disp[t, ag] * Q_disp[t, ag] for ag in 1:AG))
+    @constraint(decisao, limite_1, Q_red <= 0.05 * Q_cont0 )
 
-    @objective(m, Max, (sum((GSF[t] * GF - Q_vend)* PLD[t] for t in 1:T) + sum(Ger_disp[t, ag] * a_disp[t, ag]* PLD[t] for ag in 1:AG, t in 1:T) + P_vend * (Q_vend - C_red) - sum(P_fixo[ag] * a_disp[t, ag] * Q_disp[t, ag] for ag in 1:AG, t in t:T) - sum(CVU[ag] * a_disp[t, ag] * Ger_disp[t, ag] for t in 1:T, ag in 1:AG)))
+    @constraint(decisao, limite_2[etapa = 1:t, iop = 1:n_op], a[etapa, iop] <= 0.1)
+    @constraint(decisao, limite_3[etapa = 1:t], sum(a[etapa,:]) <= 0.15 )
 
+    for etapa = 1:t
+        # @addConstraint(decisao, a[etapa,:] .<= 0.01 )
+    end
 
-    JuMP.build(m)
+    @objective(decisao, Max, sum(P_cont * (Q_cont0 - Q_red) + ((GSF[etapa, cen] * GF + sum(a[etapa,:] .* Ger_op[cen,:])) - (Q_cont0 - Q_red)) * PLD[cen,etapa] - sum(a[etapa,:] .* Q_op[:] .* P_op_premio[:]) - sum(a[etapa,:] .* Ger_op[cen,:] .* P_op_exer[:]) for cen in 1:n_cen, etapa in 1:t)/n_cen )
 
-    return m 
+    # print(decisao)
+    # status = solve(decisao)
+
+    # println("O custo da operação é igual a: ", getobjectivevalue(decisao)," reais")
+    # println("a1, a2 = ", getvalue(a))
+    # println("Reducao = ", getvalue(Q_red))
+    # println("Dual de redução = ",getdual(limite_1))
+    # println("Dual do max por contrato = ",getdual(limite_2))
+    # println("Dual do max total = ",getdual(limite_3))
+
+    JuMP.build(decisao)
+
+    return decisao 
 end
 
 function check_function(Y, x, q)
