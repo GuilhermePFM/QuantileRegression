@@ -208,7 +208,12 @@ function extract_problem(m::JuMP.Model)
     
     # get matrix
     A = Matrix(MathProgBase.getconstrmatrix(internal_model))
+
     b = MathProgBase.getconstrLB(internal_model)
+    if getobjectivesense(m) == :Max
+        b = MathProgBase.getconstrUB(internal_model)
+    end
+    
     c = MathProgBase.getobj(internal_model)
 
     return A, b, c
