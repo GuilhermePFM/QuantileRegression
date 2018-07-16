@@ -1,0 +1,1149 @@
+\documentclass[a4paper]{IEEEtran}
+\usepackage[utf8]{inputenc}
+%\usepackage{epstopdf}
+%\usepackage[spanish]{babel}
+\usepackage[cmex10]{amsmath}
+\interdisplaylinepenalty=2500
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{verbatim}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{dcolumn}
+\usepackage{color}
+\usepackage[noadjust]{cite}
+\usepackage{url}
+\usepackage{balance}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{amsmath}
+\DeclareGraphicsExtensions{.eps}
+\DeclareMathOperator*{\Max}{max}
+\DeclareMathOperator*{\Min}{min}
+\usepackage[short]{optidef}
+%\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\Maximize}{Maximize}
+\renewcommand\footnoterule{\noindent\rule{\linewidth}{0.4pt}}
+\usepackage{cite}
+\hyphenation{op-tical net-works semi-conduc-tor}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{listings}
+\usepackage{inconsolata} % very nice fixed-width font included with texlive-full
+\usepackage{color}
+\usepackage[justification=centering]{caption}
+\begin{document}
+%
+% paper title
+% Titles are generally capitalized except for words such as a, an, and, as,
+% at, but, by, for, in, nor, of, on, or, the, to and up, which are usually
+% not capitalized unless they are the first or last word of the title.
+% Linebreaks \\ can be used within to get better formatting as desired.
+% Do not put math or special symbols in the title.
+\title{Interior Points Method Implementation for Solving the Optimal Revenue Problem of Hydro Plant Generator in Brazilian Market}
+%
+%
+% author names and IEEE memberships
+% note positions of commas and nonbreaking spaces ( ~ ) LaTeX will not break
+% a structure at a ~ so this keeps an author's name from being broken across
+% two lines.
+% use \thanks{} to gain access to the first footnote area
+% a separate \thanks must be used for each paragraph as LaTeX2e's \thanks
+% was not built to handle multiple paragraphs
+%
+
+\author{Guilherme~Machado,~Felipe~Nazaré% <-this %,~Alexandre~Street~and~Joaquim~Garcia  stops a space
+\thanks{Guilherme Machado, Felipe Nazaré, are with the Department of Electrical Engineering, PUC-Rio, Rio de Janeiro, RJ.}% <-this Alexandre Street and Joaquim Garcia 
+}
+% stops a space
+
+% note the % following the last \IEEEmembership and also \thanks - 
+% these prevent an unwanted space from occurring between the last author name
+% and the end of the author line. i.e., if you had this:
+% 
+% \author{....lastname \thanks{...} \thanks{...} }
+%                     ^------------^------------^----Do not want these spaces!
+%
+% a space would be appended to the last name and could cause every name on that
+% line to be shifted left slightly. This is one of those "LaTeX things". For
+% instance, "\textbf{A} \textbf{B}" will typeset as "A B" not "AB". To get
+% "AB" then you have to do: "\textbf{A}\textbf{B}"
+% \thanks is no different in this regard, so shield the last } of each \thanks
+% that ends a line with a % and do not let a space in before the next \thanks.
+% Spaces after \IEEEmembership other than the last one are OK (and needed) as
+% you are supposed to have spaces between the names. For what it is worth,
+% this is a minor point as most people would not even notice if the said evil
+% space somehow managed to creep in.
+
+
+
+% The paper headers
+%\markboth{}
+% The only time the second header will appear is for the odd numbered pages
+% after the title page when using the twoside option.
+% 
+% *** Note that you probably will NOT want to include the author's ***
+% *** name in the headers of peer review papers.                   ***
+% You can use \ifCLASSOPTIONpeerreview for conditional compilation here if
+% you desire.
+
+
+% If you want to put a publisher's ID mark on the page you can do it like
+% this:
+%\IEEEpubid{0000--0000/00\$00.00~\copyright~2015 IEEE}
+% Remember, if you use this you must call \IEEEpubidadjcol in the second
+% column for its text to clear the IEEEpubid mark.
+
+
+
+% use for special paper notices
+%\IEEEspecialpapernotice{(Invited Paper)}
+
+% make the title area
+\maketitle
+
+% As a general rule, do not put math, special symbols or citations
+% in the abstract or keywords.
+\begin{abstract}
+This paper proposes a model of risk management under uncertainty based on profit maximization for a hydro power plant agent  in the Brazilian Market. It is also presents an implementation of Interior Points Method for solving the aforementioned problem and a benchmark of its implementation with the Simplex method as well as with the commercial solver Clp.
+%Gain more readers for your article with a concise but comprehensive abstract that communicates the content of the full article.
+%
+%Your abstract should provide a concise summary of the research conducted, the conclusions reached, and the potential implications of those conclusions, as well as:
+%
+%Consist of a single paragraph up to 250 words that communicate clearly, with correct grammar and unambiguous terminology
+%Be self-contained, without abbreviations, footnotes, references, or mathematical equations
+%Highlight what is novel in your work
+%Include 3-5 keywords or phrases that describe the research to help readers find your article
+%Although the abstract is at the beginning of a published article, most authors write the abstract last and edit it multiple times before article publication to ensure it accurately captures the entire article.
+%
+%IEEE recommends that you do not include mathematical symbols in your article title or abstract because they may not display properly.
+\end{abstract}
+
+% Note that keywords are not normally used for peerreview papers.
+\begin{IEEEkeywords}
+Interior Points, MRE, Contract, Optimization, Simplex, Benchmark.
+\end{IEEEkeywords}
+
+
+
+
+
+
+% For peer review papers, you can put extra information on the cover
+% page as needed:
+% \ifCLASSOPTIONpeerreview
+% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
+% \fi
+%
+% For peerreview papers, this IEEEtran command inserts a page break and
+% creates the second title. It will be ignored for other modes.
+\IEEEpeerreviewmaketitle
+
+
+
+\section{Introduction}
+% The very first letter is a 2 line initial drop letter followed
+% by the rest of the first word in caps.
+% 
+% form to use if the first word consists of a single letter:
+% \IEEEPARstart{A}{demo} file is ....
+% 
+% form to use if you need the single drop letter followed by
+% normal text (unknown if ever used by the IEEE):
+% \IEEEPARstart{A}{}demo file is ....
+% 
+% Some journals put the first two words in caps:
+% \IEEEPARstart{T}{his demo} file is ....
+% 
+% Here we have the typical use of a "T" for an initial drop letter
+% and "HIS" in caps to complete the first word.
+\IEEEPARstart{T}{he} relevance of hydro generation for Brazilian Electrical System causes a serious dependency of difficult prediction of natural fenomena, the water inflow. As one of the most important input data to predict future energy prices, the nature of this variable brings to the analysis the stocastical characteristic. During the past years, the hydrologycal conditions has been realizing far below from the hystorical average and, consequently, stressing the operation of the system, since the observed draughts impact in hydro plants reservoirs level, requesting thermal plants operation in view of preserving water in reservoirs for future generation. For a hydro plant, this situation increases its risks in both ways; firstly, the generation is reduced during this period, which is the main source of profit and, once the hydro plant is obligated to buy the non-produced energy in spot market by high spot prices in view of complying its contractual obligations. This paper proposes some risk management tools to mitigate of hydro generator's risks under uncertainty. In this model, it is maximized the generator revenue under the consideration of a risk measure for their contracts aiming at lowering the generator risks while maximizing its revenue. 
+
+Additionally it is proposed an implementation of Interior Points Method, to solve the hydro generator problem, with validation test results and a stress test, considering several scenarios for the hydro plant generator problem.
+
+The section II briefly introduces the Brazilian Electricity Market, in order to present in section III the hydro plant generator problem and to propose a linear optimization model to solve it. The section IV discuss the implementation of the Interior Points Method and in section V it is detailed a case study with a stress test for the generator problem and validation tests for the Interior Points Method implementation.
+
+% You must have at least 2 lines in the paragraph with the drop letter
+% (should never be an issue)
+
+%\hfill mds
+ 
+\hfill July 4, 2018
+
+\section{Brazilian Electricity Market}
+The Brazilian Electricity Market is divided by three types of market: 
+
+\begin{itemize}
+	\item Retail Market (ACL)
+	\item Regulated Market (ACR)
+	\item Short Term Market (MCP) 
+\end{itemize}
+
+Each one of the markets has its own characteristics, but as the goal of this work is the application of the algorithm of interior points in solving a contract problem for a single hydro plant in the Brazilian market, we will only briefly describe them, for the better comprehension of the application that will be shown in the next section. 
+
+The Retail Market consumers can freely negotiate between buyers and sellers through a non-organized market with the only condition that all contracts must be registered at the Market Operator and all of them must be backed by a physical guarantee.
+
+In the Regulated Market, the consumers do not have the right to choose their supplier, instead they are imposed a price defined by national public auctions.
+
+The Short Term Market is designed to settle the differences between the contracted energy amounts and the generated/consumed energy. This market is operated by the Brazilian Market Operator (CCEE), who does the accounting of energy generated by each power plant and its contractual obligations.
+
+
+In the following sections, it will be briefly explained the electricity market concepts that are necessary for the entire comprehension of the presented problem.
+
+\subsection{Types Of Contracts}
+The Regulated Market has 2 types of contract offered:
+
+\begin{itemize}
+	\item Energy Quantity 
+	\item Energy Availability
+\end{itemize}
+
+Energy Quantity contracts are usually used by hydro plants agents where the risk is allocated to the generator. The contract specifies the prince and amount of energy the plant must be able to provide for the counterpart.
+
+In Energy Availability contracts, the agent put their plant available capacity at the distributor disposal and receives a constant revenue for been available to dispatch at any time. When the plant is dispatched, the owner also receives a payment for its variable cost.
+
+\subsection{Physical Guarantee}
+The Physical Guarantee is the amount of energy that each power plant is allowed to trade. Its value is determined by the Ministry of Mines and Energy and it represents a physical coverage for the sale of energy, which is mandatory for every energy contract in Brazil. 
+
+It is calculated individually and, for hydro plants, which is the focus of this paper, it depends on the amount of energy it can produce continuously during the hystorical critical period of the system.
+
+\subsection{Energy Relocation Mechanism}
+The Energy Relocation Mechanism (MRE) is a structural hedging mechanism for hydro power plants, managed by CCEE. In this mechanism, all hydro generation from participant plants is treated as a pool and each hydro plant has a share of the total hydro generation based on its physical guarantee.
+
+This mechanism is necessary to mitigate the some of the exogenous risks associated to the hydro plant operation, that is subject to the ONS (National System Operator) orders. For examplo, the MRE prevents some risks as for hydro plants located at areas affected by drought due to season conditions are less affected. 
+% needed in second column of first page if using \IEEEpubid
+%\IEEEpubidadjcol
+
+\section{Contract Dilemma}
+Nowadays with the overall low hydro conditions (and other problems that is not in the scope of this study), the MRE has not been successful in mitigating the risk of the hydro plants generators, as they are constantly been failing to meet its contractual obligations. 
+
+Therefore hydro plants are been constantly exposed to a high level of risk in their commercial operations.
+
+Considering that the goal of all contracted agent is to minimize its risk, in this work it is proposed an optimization model to solve the problem of optimal use of the two mechanisms regulated by the market that can be used to lower the agents exposure. These mechanisms are:
+
+\begin{itemize}
+	\item Reduction of contracted capacity
+	\item Buy new option contract in the 	Short Term Market
+\end{itemize}
+
+These two options should be optimized for a certain risk measure in order to change the agent current risk to its desired target. 
+
+\subsection{Optimization Problem} 
+In this work we propose a methodology to optimize the agent profit securing the risk exposure to a desired target.
+
+The objective function will be the maximization of the profit, under a chosen risk measure, subject to the constraints of the market regulation.
+
+The agent must comply with the physical guarantee norm, which specifies that he can not sell more energy contracts than he has of physical guarantee plus the amount of physical guarantee he has in his contracts.
+
+\begin{align}
+	Q_{cont} &\leq GF + \sum_{i=1}^{I} a_{op_{i,t}} \cdot Q{op_{i,t}} \forall t \\
+	0 &\leq a_{op_{i,t}} \leq 0.005 \ \forall t \ \forall i \\
+	0 &\leq \sum_{i=1}^{I} a_{op_{i,t}} \leq 0.1
+\end{align}
+
+Where $t$ indicates the stage, $i$ indicates the scenario, $a_{op_{i,t}}$ is the percentage of the availability contract bought. $GF$ is his physical guarantee, $Q_{cont}$ is the amount of energy he is allowed to sell in his contract and $Q{op_{i,t}}$ is the amount of energy in every option contract he has. It is important to highlight that this equation is note strictly necessary for the present model. The introduction of this equation is only a way to enlarge the problem difficulty for the solvers.
+
+Another option for the agent is to reduce its contractual obligation. This way it can be negotiated a reduction of at most 5\% of his contract. Again, the limit used in this problem was introduced to stress the solvers. Some realistic interpretation may be a contratual limit previoulsy signed between parts or a limit due to financing condition.
+\begin{align}
+	Q_{cont} &= Q_{original} - Q_{reduced}\\
+	0 &\leq Q_{reduced} \leq 0.05 \cdot Q_{original}
+\end{align}
+
+The generator total owned energy after the computation of the contracts negotiation is:
+\begin{align}
+	G_{tot_t} = GSF_t \cdot GF + \sum_{i=1}^{I} a_{op_{i,t}} \cdot G_{op_{i,t}} \forall t
+\end{align}
+
+The generator energy settlement done by MRE can be calculated after the generator exposure is changed:
+
+\begin{equation}
+\begin{split}
+	Profit = P_{cont} \cdot Q_{cont} + (G_{tot_t} - Q_{cont}) \cdot PLD_t  \\
+	 - \sum_{i=1}^{I} P^{fix}_{op_i} \cdot a_{op,i,t} \cdot G_{op,i,t} - \sum_{i=1}^{I} P^{ex}_{op_i} \cdot a_{op_{i,t}} \cdot G_{op_{i,t}}
+	\end{split}
+\end{equation}
+
+ In the above equation, $Q_{cont}$ is the plant selling contract energy amount and $P_{cont}$ is the respective contract price. $PLD$ is the liquidation price, which is defined by the Market Operator.
+
+If we consider a risk neutral agent, the risk measure function is the expected value and the whole optimization problem model is the following:
+
+\begin{maxi}|s|[3]   
+    {a_{op}, Q_{reduced}, G_{tot_t}}{\mathbb{E}\{ P_{cont} \cdot Q_{cont} + (G_{tot_t} - Q_{cont}) \cdot PLD_t }{}{}
+ \breakObjective{ - \sum_{i=1}^{I} P^{fix}_{op_i} \cdot a_{op_{i,t}} \cdot Q_{op_{i,t}} - \sum_{i=1}^{I} P^{ex}_{op_i} \cdot a_{op_{i,t}} \cdot G_{op_{i,t}} \} }
+  \addConstraint{G_{tot_t}=}{GSF_t \cdot GF +\sum_{i=1}^{I} a_{op_{i,t}} \cdot G_{op_{i,t}} }{\forall t, \forall i}
+  \addConstraint{Q_{cont}}{\leq GF + \sum_{i=1}^{I} a_{op,i,t} \cdot Q_{op_{i,t}}}{\forall t}
+  \addConstraint{0}{\leq  a_{op_{i,t}}  \leq 0.1}{\forall t \forall i}
+  \addConstraint{0}{\leq \sum_{i=1}^{I}  a_{op_{i,t}} \leq 0.15}{\forall t \forall i}
+	\addConstraint{Q_{cont}}{=Q_{original} - Q_{reduced}}{}
+	\addConstraint{0}{\leq Q_{reduced} \leq 0.05 \cdot Q_{original}}{}
+	\addConstraint{}{a_{op}, Q_{reduced}, G_{tot_t}\geq 0}{}
+\end{maxi}
+
+\section{Interior Points Method}
+As described in \cite{bertsimas}, Interior Points method offers a different approach than the Simplex method for solving linear optimization problems. While the Simplex explores the geometry of the feasible set, going through the vertex searching for the optimal one, the Interior Points method explores a insight on duality to solve numerically a set of non-linear equations. In a geometrical interpretation, the Interior Points method starts from one initial point and goes straight to the solution, instead of walking at the borders like the Simplex. 
+
+
+The first insight needed for the Interior Points method to work is that the original problem must be reformulated, relaxing all constraints. In order to achieve this, one must use Lagrangian relaxation for the the feasibility constraints and Barrier Methods for the variables positive constraints. Barrier Method is a relaxation technique for the constraint $x \geq 0$, which uses the logarithmic function $-\mu \sum_{i=1}^n ~ln~ x_i$.  Therefore, the problem in the standard form stated as a minimization can be modeled as an unconstrained one.
+
+\begin{equation}
+\begin{aligned}
+\ &\underset{x}{\text{min}}
+& & c^T x\\
+& \text{s.a.}
+& & Ax = b \\
+&&& x \geq 0 \\
+\end{aligned}
+\end{equation}
+\begin{equation*}
+\equiv
+\end{equation*}
+\begin{equation}
+\begin{aligned}
+\ \underset{x}{\text{min}}
+& & c^T x -\mu \sum_{i=1}^n ~ln~ x_i - \lambda^{T}(Ax-b)\\
+\end{aligned}
+\end{equation}
+
+As presented in \cite{torontointerior}, one can define a set of conditions to ensure optimality of the linear programming solution. These conditions are called KKT conditions, or \emph{Karush-Kuhn-Tucker} conditions. They are stated as:
+%
+%\begin{enumerate}
+%\item $\nabla_x L(x^*,\lambda^*) = 0$	
+%\item All of the constraints are satisfied at $x^*$
+%\item $\lambda^* \geq 0$
+%\item $\forall~ 1\leq i \leq m,~ \lambda_i c_i(x^*)=0$
+%\end{enumerate}
+\begin{enumerate}
+\item $A^{T}\lambda + s = c$	
+\item $Ax = b$
+\item $x \geq 0$
+\item $s \geq 0$
+\item $x_i s_i = 0, ~1 \leq i \leq n$
+\end{enumerate}
+These conditions can be resumed in the above problem as:
+\begin{enumerate}
+\item $A^{T}\lambda + \mu X^{-1} e = c$	
+\item $Ax = b$
+\end{enumerate}
+Setting $s=\mu X^{-1} e$, the original KKT conditions can be recovered:
+\begin{align}
+	A^{T}\lambda + s &= c\\
+	Ax &= b\\
+	X^{-1} e &= \mu e
+\end{align}
+Observe that these conditions for the optimality of a solution to this new barrier subproblem is identical to the conditions for the original problem, except for the complementary condition 5), which is relaxed by the barrier constant $\mu$. This implies that by choosing $\mu = 0$, the optimal solution of the original problem is recovered.
+
+By considering these set of equations, we can convert our original problem with linear constraints into a problem which consists of solving a set of nonlinear equations. The method of solution choosed is the Newton's method for finding roots of nonlinear equations and it is presented next. 
+
+\subsection{Newton Method}
+The Newton Method is a iterative method for solving nonlinear equations which uses a first order multivariable Taylor series expansion. Consider the function $F(z)$ one wishes to find $z^*$ such that $F(z^*) = 0$. From an initial guess $z^0$, one can improve the solution using the first order Taylor expansion:
+\begin{align}
+	F(z^{k+1}) \approx F(z^k) + J(z^k)d
+\end{align} 
+Where $J$ is the Jacobian of $F$ and $d$ is the step, also called \emph{Newton direction}. 
+
+The interior points KKT conditions can be formulated so as one can apply the Newton Method:
+ \begin{align*}
+	F(z) = \begin{bmatrix}
+			Ax - b\\
+			A^{T}\lambda + s - c\\
+			X^{-1} e - \mu e
+		\end{bmatrix}
+\end{align*} 
+The Jacobian of $F$ is:
+ \begin{align*}
+	J(z) = \begin{bmatrix}
+			A & 0 & 0\\
+			0 & A^T & 0\\
+			S & 0 & X_k
+		\end{bmatrix}
+\end{align*} 
+Where $X=diagm(x_1,\dots,x_n)$, $S=diagm(s_1,\dots,s_n)$. Therefore the system of nonlinear equations is resumed to:
+\begin{align}
+	F(z^{k+1}) \approx F(z^k) + J(z^k)d
+\end{align} 
+ \begin{align*}
+	F(x^{k+1}) =\begin{bmatrix}
+			Ax^k - b\\
+			A^{T}\lambda + s^k - c\\
+			{X_k}^{-1} e - \mu e
+		\end{bmatrix} 
+\end{align*} 
+ \begin{align*}
+	 + \begin{bmatrix}
+			A & 0 & 0\\
+			0 & A^T & I\\
+			S_k & 0 & X_k
+		\end{bmatrix} \begin{bmatrix}
+			b_x^k\\
+			b_p^k\\
+			b_s^k
+		\end{bmatrix}
+\end{align*}
+But, as we want the roots:
+\begin{align*}
+	0 &= F(z^k) + J(z^k)d \\
+	F(z^k) &= - J(z^k)d \\
+\end{align*} 
+ \begin{align*}
+	 \begin{bmatrix}
+			Ax^k - b\\
+			A^{T}\lambda + s^k - c\\
+			{X_k}^{-1} e - \mu e
+		\end{bmatrix} =
+		 \begin{bmatrix}
+			A b_x^k\\
+			A^T b_x^k + b_p^k\\
+			S_k b_x^k + X_k b_s^k
+		\end{bmatrix}
+\end{align*}  
+But, since $Ax^k = b$ and $A^{T}\lambda + s^k = c$, the equations resume to:
+ \begin{align}
+	 \begin{bmatrix}
+			0\\
+			0\\
+			{X_k}^{-1} e - \mu e
+		\end{bmatrix} =
+		 \begin{bmatrix}
+			A b_x^k\\
+			A^T b_x^k + b_p^k\\
+			S_k b_x^k + X_k b_s^k
+		\end{bmatrix}
+\end{align}  
+
+\subsection{Step Length}
+After obtaining the \emph{Newton direction}, we should find the real step lengths for the vector $[x, ~ p, ~ s]^T$. It is important that they are close to $\textbf{d}$ but not greater, so that the nonnegativity requirements for $x$ and $s$ are not violated. It is stated in \cite{bertsimas}, that one possible step would be:
+ \begin{align}
+	 \beta_P = min \{1, ~\alpha~ \underset{i|(d^k_x)_i < 0}{min} \{ - \frac{x^k_i}{(d^k_x)_i}\} \} \\
+	 \beta_D = min \{1, ~\alpha~ \underset{i|(d^k_x)_i < 0}{min} \{ - \frac{x^k_i}{(d^k_x)_i}\} \}		 
+\end{align}  
+Where $\alpha \in [0,1]$. By applying the step lengths, the new vector of solution is:
+ \begin{align}
+	 x^{k+1} = x^k + \beta_P^k d_x^k \\
+	 p^{k+1} = p^k + \beta_D^k d_p^k \\ 		 
+	 s^{k+1} = s^k + \beta_D^k d_s^k
+\end{align}  
+
+\subsection{Barrier Parameter}
+Note that the \emph{Newton direction} depends on the barrier parameter $\mu^k$. In order to get the result $[x^k, ~ p^k, ~ s^k]^T$ with great precision, one must iterate several times with $\mu$ kept fixed. However since it is only necessary that the algorithm gets the right direction, it suffices if only one iteration with the same $\mu$ is done. This at each iteration the $\mu$ is changed. Following \cite{bertsimas}, one way of updating $\mu$ is:
+ \begin{align*}
+	 \mu^{k+1} = \rho ~ \frac{{x^k}^T{s^k}}{n} \\
+\end{align*}
+Where $\rho \in [0,1]$ is typically set to $1$, but can be lower if the algorithm has not progressed.
+%Primal-Dual Barrier Method
+\subsection{Algorithm}
+The procedure of the Interior Points algorithm described above can be summarized into the following pseudo-code:
+\begin{algorithm}[H]
+\caption{Interior Point Method}\label{euclid}
+\begin{algorithmic}[1]
+\State Start with feasible $x^0>0,s^0>0,p^0$
+\While {$x^Ts > \epsilon$} 
+	\State Set $\mu^{k+1} = \rho ~ \frac{{x^k}^T{s^k}}{n}$
+	\State Solve the system $d = - J(z^k)^{-1}F(z^k) $
+	\State Find the steps \begin{align*}
+	 \beta_P = min \{1, ~\alpha~ \underset{i|(d^k_x)_i < 0}{min} \{ - \frac{x^k_i}{(d^k_x)_i}\} \} \\
+	 \beta_D = min \{1, ~\alpha~ \underset{i|(d^k_x)_i < 0}{min} \{ - \frac{x^k_i}{(d^k_x)_i}\} \}		 
+\end{align*}  
+	\State Update solution \begin{align*}
+	 x^{k+1} = x^k + \beta_P^k d_x^k \\
+	 p^{k+1} = p^k + \beta_D^k d_p^k \\ 		 
+	 s^{k+1} = s^k + \beta_D^k d_s^k
+	\end{align*}  
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+The implementation for this algorithm is presented at the appendix \ref{appendix:A}.
+
+\section{Case Study}
+In this section some test results for the Interior Points are presented, as well as one stress test for  problem proposed in section II. For the stress test, a benchmark will be made comparing the Interior Points algorithm performance to that of a commercial solver \emph{Clp} and a Simplex implementation.
+
+\subsection{Interior Points Algorithm Unitary Tests}
+This subsection presents $4$ unitary tests, which proves the implemented method works for unbounded, unfeasible and regular cases.
+
+\subsubsection{Regular Case}
+  The regular case test presents a simple production problem modeled as follows:
+    \begin{equation}
+        \begin{aligned}
+            & \underset{x_1, x_2}{\text{max}}
+            & & 4x_1 + 3x_2\\
+            & \text{s.a.}
+            & & 2x_1 + x_2 \leq 4 \\
+            &&& x_1 + 2x_2 \leq 4 \\
+            &&& x_1, x_2 \geq 0 \\
+        \end{aligned}
+    \end{equation}
+ The result of the Interior Points implementation was:\\
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{c|c}
+                 {x1} & 1.33334\\
+                {x2} &  1.33326\\
+                {s1} & 5.48651e-5\\
+                {s2} & 1.371791e-4\\
+                {z} & 9.3331\\
+            iterations  & 13 \\
+            \end{tabular}
+            \caption{Results for regular problem case}
+            \label{tab:1}
+        \end{table}
+
+\subsubsection{Regular Case Extended}
+ The regular case extended is similar to the regular case production problem, but with one more constraint added:
+       \begin{equation}
+        \begin{aligned}
+            & \underset{x_1, x_2}{\text{max}}
+            & & 4x_1 + 3x_2\\
+            & \text{s.a.}
+            & & 2x_1 + x_2 \leq 4 \\
+            &&& x_1 + 2x_2 \leq 4 \\
+            &&& x_1 + x_2 \geq 1 \\
+            &&& x_1, x_2 \geq 0 \\
+        \end{aligned}
+    \end{equation}
+     The results for this problem were:\\
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{c|c}
+                 {x1} & 1.33334\\
+                {x2} &  1.33327\\
+                {s1} & 4.81635e-5\\
+                {s2} & 1.20431e-4\\
+                {s3} & 1.66661\\
+                {z} & 9.3331\\
+            iterations  & 13 \\
+            \end{tabular}
+            \caption{Results for regular problem extended case}
+            \label{tab:2}
+        \end{table}
+\subsubsection{Unbounded Case}
+The unbounded problem tested was formulated as follows:
+       \begin{equation}
+        \begin{aligned}
+            & \underset{x_1, x_2}{\text{max}}
+            & & x_1 + x_2\\
+            & \text{s.a.}
+            & & 0.5x_1  -x_2 \leq 0.5 \\
+            &&& -4x_1 + x_2 \leq 1 \\
+            &&& x_1, x_2 \geq 0 \\
+        \end{aligned}
+    \end{equation}
+     The algorithm did 6 iterations after which it indicated that the result was unbounded. At that point the partial results were:\\
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{c|c}
+                 {x1} & 3.24144e10\\
+                {x2} &  1.29658e11\\
+                {s1} & 1.1345e11\\
+                {s2} & 1497.18\\
+                {z} & 1.620719544426749e11\\
+            iterations  & 6 \\
+            \end{tabular}
+            \caption{Results for unbounded problem case}
+            \label{tab:3}
+        \end{table}
+        
+\subsubsection{Unfeasible Case}
+The unfeasible problem tested was formulated as follows:
+       \begin{equation}
+        \begin{aligned}
+            & \underset{x_1, x_2}{\text{max}}
+            & & x_1 + x_2\\
+            & \text{s.a.}
+            & & 1x_1  + 3x_2 \leq 8 \\
+            &&& 3x_1 + 2x_2 \leq 12 \\
+            &&& -x_1 - 2x_2 \leq -13 \\
+            &&& x_1, x_2 \geq 0 \\
+        \end{aligned}
+    \end{equation}
+     The algorithm did 5 iterations after which it stoped. At that point the partial results were:\\
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{c|c}
+                 {x1} & 1.18589\\
+                {x2} &  1.55707\\
+                {s1} & 1.98543e-5\\
+                {s2} & 1.04244\\
+                {s3} & 1.97908e-5\\
+                {z} & 2.742960689180599\\
+            iterations  & 5 \\
+            \end{tabular}
+            \caption{Results for unfeasible problem case}
+            \label{tab:4}
+        \end{table}
+%contendo os testes unitários para mostrar que o algoritmo funciona
+
+
+\subsection{Stress Test}
+Finally, all three models were subject to a stress test. This analysis intends to examine their performance while the problem size increases. 
+
+In order to test the model, the same contract options and scenarios was used but the horizon was extended progressively for each case, causing the stress to increase. With the results, it is expected to present a curve that shows when the Interior Points and Simplex diverges from the GLPK solver.
+
+%The number of stages for each test cases is detailed in the figure \ref{fig:nvar} below. 
+As said before their only difference lies in the number of stages. It is noticeable that the number of decision variables increase linearly with the analysis horizon. The biggest problem has 527 decision variables and 276 constraints.
+%\begin{figure}[H]
+%	\centering
+%	\includegraphics{NumberOfVariables.PNG}
+%	\caption{Number of Variables}
+%	\label{fig:nvar}
+%\end{figure}
+
+The figure \ref{fig:timetab} shows a comparison between the computational time of each solving methods.
+\begin{figure}[H]
+	\centering
+	\includegraphics{CompTime.PNG}
+	\caption{Computational Time Table}
+	\label{fig:timetab}
+\end{figure}
+
+The figure shows that the solver GLPK performs way better than the Simplex and Interior Points implementation. The Interior Points presents better solving time than the simplex, it could be justified by the number of vertex of the problem due to the Simplex combinatorial algorithm. 
+ 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{CompTime_Graph.PNG}
+	\caption{Computational Time}
+	\label{fig:time}
+\end{figure}
+
+The figure \ref{fig:time} shows how the time increases with the cases. The difference between the solvers it is more evident from the cases 8 to 13, where the linear programming problem is bigger.
+
+Besides the difference in computational time between the solvers, the objective cost of the solvers is also presented at figure \ref{fig:costtab}.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{TotalCost.PNG}
+	\caption{Total Cost Table}
+	\label{fig:costtab}
+\end{figure}
+
+The interior points method presents a better solution time than the simplex, although it is still much slower than the GLPK solver. It is also worth noticing that the simplex performs really well in small problems, but its performance goes slower quickly with the size of the problem.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{TotalCost_Graph.PNG}
+	\caption{Total Cost}
+	\label{fig:cost}
+\end{figure}
+% An example of a floating figure using the graphicx package.
+% Note that \label must occur AFTER (or within) \caption.
+% For figures, \caption should occur after the \includegraphics.
+% Note that IEEEtran v1.7 and later has special internal code that
+% is designed to preserve the operation of \label within \caption
+% even when the captionsoff option is in effect. However, because
+% of issues like this, it may be the safest practice to put all your
+% \label just after \caption rather than within \caption{}.
+%
+% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
+% option should be used if it is desired that the figures are to be
+% displayed while in draft mode.
+%
+%\begin{figure}[!t]
+%\centering
+%\includegraphics[width=2.5in]{myfigure}
+% where an .eps filename suffix will be assumed under latex, 
+% and a .pdf suffix will be assumed for pdflatex; or what has been declared
+% via \DeclareGraphicsExtensions.
+%\caption{Simulation results for the network.}
+%\label{fig_sim}
+%\end{figure}
+
+% Note that the IEEE typically puts floats only at the top, even when this
+% results in a large percentage of a column being occupied by floats.
+
+
+% An example of a double column floating figure using two subfigures.
+% (The subfig.sty package must be loaded for this to work.)
+% The subfigure \label commands are set within each subfloat command,
+% and the \label for the overall figure must come after \caption.
+% \hfil is used as a separator to get equal spacing.
+% Watch out that the combined width of all the subfigures on a 
+% line do not exceed the text width or a line break will occur.
+%
+%\begin{figure*}[!t]
+%\centering
+%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
+%\label{fig_first_case}}
+%\hfil
+%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
+%\label{fig_second_case}}
+%\caption{Simulation results for the network.}
+%\label{fig_sim}
+%\end{figure*}
+%
+% Note that often IEEE papers with subfigures do not employ subfigure
+% captions (using the optional argument to \subfloat[]), but instead will
+% reference/describe all of them (a), (b), etc., within the main caption.
+% Be aware that for subfig.sty to generate the (a), (b), etc., subfigure
+% labels, the optional argument to \subfloat must be present. If a
+% subcaption is not desired, just leave its contents blank,
+% e.g., \subfloat[].
+
+
+% An example of a floating table. Note that, for IEEE style tables, the
+% \caption command should come BEFORE the table and, given that table
+% captions serve much like titles, are usually capitalized except for words
+% such as a, an, and, as, at, but, by, for, in, nor, of, on, or, the, to
+% and up, which are usually not capitalized unless they are the first or
+% last word of the caption. Table text will default to \footnotesize as
+% the IEEE normally uses this smaller font for tables.
+% The \label must come after \caption as always.
+%
+%\begin{table}[!t]
+%% increase table row spacing, adjust to taste
+%\renewcommand{\arraystretch}{1.3}
+% if using array.sty, it might be a good idea to tweak the value of
+% \extrarowheight as needed to properly center the text within the cells
+%\caption{An Example of a Table}
+%\label{table_example}
+%\centering
+%% Some packages, such as MDW tools, offer better commands for making tables
+%% than the plain LaTeX2e tabular which is used here.
+%\begin{tabular}{|c||c|}
+%\hline
+%One & Two\\
+%\hline
+%Three & Four\\
+%\hline
+%\end{tabular}
+%\end{table}
+
+
+% Note that the IEEE does not put floats in the very first column
+% - or typically anywhere on the first page for that matter. Also,
+% in-text middle ("here") positioning is typically not used, but it
+% is allowed and encouraged for Computer Society conferences (but
+% not Computer Society journals). Most IEEE journals/conferences use
+% top floats exclusively. 
+% Note that, LaTeX2e, unlike IEEE journals/conferences, places
+% footnotes above bottom floats. This can be corrected via the
+% \fnbelowfloat command of the stfloats package.
+
+
+
+
+\section{Conclusion}
+As showed by the stress test, the Interior Points algorithm is much more robust to growth of problem than the Simplex algorithm. This could be explained by the Simplex approach, which is combinatorial and has the step limited to one adjacent vertex, while the Interior Points goes straight to the solution. 
+
+
+% if have a single appendix:
+%\appendix[Proof of the Zonklar Equations]
+% or
+%\appendix  % for no appendix heading
+% do not use \section anymore after \appendix, only \section*
+% is possibly needed
+
+% use appendices with more than one appendix
+% then use \section to start each appendix
+% you must declare a \section before using any
+% \subsection or using \label (\appendices by itself
+% starts a section numbered zero.)
+%
+
+
+\appendices
+\section{Interior Points Method Implementation}
+\label{appendix:A}
+\input{julia_syntax.tex}
+The Interior Points Method implementation was programmed at Julia Language.
+\begin{lstlisting}[language=Julia,numbers=none]
+#
+# Interior Points
+#
+
+# Guilherme Pereira Freire Machado
+
+function interior_points(A::Array{Float64}, b::Array{Float64}, c::Array{Float64}, debug=true)
+
+    open_log_i(A, b, c)
+    stream = get_log_i()
+
+    % initial guess
+    m, n = size(A)
+
+    x0 = ones(n)
+    p0 = zeros(m)
+    s0 = ones(n)
+    
+    x = ones(n)
+    p = zeros(m)
+    s = ones(n)
+
+    x, s, p, status, it = interior_algorithm(A, b, c, x0, s0, p0, stream, debug)
+
+    return x, p, s, status, it
+end
+
+function interior_bigM(A, b, c, debug)
+    stream = get_log_i()
+    
+    m, n = size(A)
+    
+    U = maximum(c)
+    M = U*1e5
+    
+    % add bigM variable if necessary
+    if any((b - A*ones(n)) .!= 0)
+        c_1 = [c ; M]
+        A_1 = [A (b - A*ones(n))]
+        b_1 = b
+        % initial feasible solution
+        x0 = ones(n+1)
+    else
+        c_1 = c
+        A_1 = A
+        b_1 = b
+        % initial feasible solution
+        x0 = ones(n)
+    end
+    p = (c'[1:(m)]*A[:,1:(m)])' % ones(m)%
+    s0 = (c_1' - p'A_1)'
+    
+    A=A_1
+    c=c_1
+    x=x0
+    s=s0
+    pwrite(stream, "Usando big M para comecar no ponto viavel x = e", debug)
+    pwrite(stream, "Problema:", debug)
+    pwrite(stream, "A = $A_1", debug)
+    pwrite(stream, "b = $b_1", debug)
+    pwrite(stream, "x0 = $x0", debug)
+    pwrite(stream, "s0 = $s0", debug)
+    pwrite(stream, "p = $p", debug)
+    pwrite(stream, "")
+
+    x, s, p, status, it = interior_algorithm(A_1, b_1, c_1, x0, s0, p, stream, debug)
+
+    return x, p, s, status, it
+end 
+
+function interior_algorithm(A, b, c, x, s, p, stream, debug=true)
+    err = 1e-3
+    alpha= 0.9
+    rho = 0.5
+    n = size(A)[2]
+    mu = 0.0
+    dx = 0.0
+
+    maxit = 200
+    it=0
+    for i in 1:maxit
+        pwrite(stream, "It: $i - epsilon = $(convergence_error(s, x, mu)) - x = $x", debug)
+
+        % 2) 1st test for convergence
+        if s'*x < err  % i > 40 && optimality_test(s, x, mu, err) && maximum(abs.(dx)) < err
+            % convergiu
+            status = 1
+
+            if norm(x) < norm(p) % check for unbounded problem
+                status = -1
+                pwrite(stream, "The problem is unbounded!")
+            else
+
+                pwrite(stream, "Interior Points algorithm converged! ( s*x criteria)")
+            end
+
+
+            % if check_unbounded(A, b, c, x)
+            %     status = -1
+            % end
+
+            % if check_infeasible(x)
+            %     status = -2
+            % end
+
+            result_log_i(i, x,  (c'*x), status, stream)
+            return x, s, p, status, it
+        end
+        
+        % 3) computation of newton directions
+        mu = rho *  x' * s / n 
+        dx, ds, dp = compute_directions_old(x, s, p, mu, A, b, c)
+        rho = update_rho(rho, x + dx, x)
+
+        % 4) and 5) update variables
+        x, s, p, unbounded = update_variables(x, s, p, dx, ds, dp, alpha)
+
+        if  convergence_error(s, x, mu) > 1e5 &&  all(x .> 0)
+            status = -1
+            result_log_i(i, x, (c'*x), status, stream, debug)
+            return x, s, p, status, it
+        end
+
+        it += 1
+    end
+
+    pwrite(stream, "Maximum number of iterations($maxit) exceeded!")
+    result_log_i(maxit, x, (c'*x), 0, stream)
+
+    return x, s, p, 0, it
+end
+
+function optimality_test(s::Array{Float64}, x::Array{Float64}, mu::Float64, err::Float64)
+    nx = length(x)
+    op = convergence_error(s, x, mu)
+    return op < err
+end
+
+function check_infeasible(x)
+    if round(x[end],2) > 0
+        println(x)
+        return true
+    end
+
+    return false
+end
+
+function convergence_error(s::Array{Float64}, x::Array{Float64}, mu::Float64)
+    nx = length(x)
+    op = x'*s - (mu*ones(nx)')*ones(nx)
+    return op
+end
+
+function compute_directions(x::Array{Float64}, s::Array{Float64}, p::Array{Float64}, mu::Float64,  A::Array{Float64}, b::Array{Float64}, c::Array{Float64})
+    % solve linear system:
+    nx = length(x)
+    np = length(p)
+    ns = length(s)
+    e = ones(nx)
+
+    inv_s = diagm(s) \ I 
+    D2 = diagm(x) * inv_s
+    D = D2^0.5
+
+    parcial_1 = (A * D2 * A') \ (A * D)
+    P = D * A' * parcial_1
+    vmu = (diagm(x) \ D) * (mu * ones(nx) - diagm(x) * diagm(s) * ones(nx))
+    
+
+    dx = D * (I - P) * vmu
+    dp = -((A * D2 * A') \ (A*D)) * vmu
+    ds = (D \ P) * vmu
+
+     return dx, ds, dp
+end
+
+function compute_directions_old(x::Array{Float64}, s::Array{Float64}, p::Array{Float64}, mu::Float64,  A::Array{Float64}, b::Array{Float64}, c::Array{Float64})
+    % solve linear system:
+    nx = length(x)
+    np = length(p)
+    ns = length(s)
+    e = ones(nx)
+
+    matrix = [A zeros(size(A)[1], size(A')[2]) zeros(size(A)[1], nx) ;
+            zeros(size(A')[1], size(A)[2]) A' eye(size(A')[1]) ;
+            diagm(s) zeros(length(x), size(A')[2]) diagm(x)]
+
+    d = matrix \ - [A * x - b ;
+                A' * p + s - c;
+                diagm(x)*diagm(s)*e - mu * e]
+    
+    dx = d[1:nx]
+    dp = d[(nx + 1) : (nx + np)]
+    ds = d[(nx + np + 1) : end]
+
+     return dx, ds, dp
+end
+
+function update_variables(x::Array{Float64}, s::Array{Float64}, p::Array{Float64}, dx::Array{Float64}, ds::Array{Float64}, dp::Array{Float64}, alpha::Float64)
+    % compute step beta for primal
+    ratio_x = -x ./ dx
+    ratio_x[ dx .>= 0] = Inf
+    % ratio_x = [v for (i,v) in enumerate(ratio_x) if dx[i] < 0]
+    betap = minimum([1, alpha*minimum(ratio_x)]) 
+    
+    % compute step beta for dual slack
+    ratio_s = -s ./ ds
+    ratio_s[ds .>= 0] = Inf
+    % ratio_s = [v for (i,v) in enumerate(ratio_s) if ds[i] < 0]
+    betad = minimum([1, alpha*minimum(ratio_s)]) 
+    
+    % update variables
+    x = x + betap * dx
+    s = s + betad * ds
+    p = p + betad * dp
+
+    return x, s, p, false
+end
+
+function update_rho(rho, x_new, x_old)
+    if maximum(abs.(x_new - x_old)) < 1
+        rho *= 0.9
+
+    else
+        rho = 0.8
+    end
+    return rho
+end 
+
+function open_log_i(A::Array{Float64,2}, b::Array{Float64,1}, c::Array{Float64,1}, debug=true)
+    fname = "Interior_Points.log"
+    if isfile(fname)
+        stream = open(fname, "a")
+        pwrite(stream, "=======================", debug)
+        pwrite(stream, "Comeco da Solucao do PL", debug)
+        pwrite(stream, "=======================", debug)
+        pwrite(stream, "Problema:", debug)
+        pwrite(stream, "A = $A", debug)
+        pwrite(stream, "b = $b", debug)
+        pwrite(stream, "c = $c", debug)
+        pwrite(stream, "", debug)
+        close(stream)
+    else
+        stream = open(fname, "w", debug)
+        pwrite(stream, "=======================", debug)
+        pwrite(stream, "Comeco da Solucao do PL", debug)
+        pwrite(stream, "=======================", debug)
+        pwrite(stream, "Problema:", debug)
+        pwrite(stream, "A = $A", debug)
+        pwrite(stream, "b = $b", debug)
+        pwrite(stream, "c = $c", debug)
+        pwrite(stream, "", debug)
+        close(stream)
+    end
+    nothing
+end
+
+function get_log_i()
+    fname = "Interior_Points.log"
+    stream = open(fname, "a")
+    pwrite(stream, "Interior Points")
+    pwrite(stream, "--------------")
+
+    return stream
+end
+
+function result_log_i(it::Int, x::Array{Float64,1}, z::Float64, status::Int, stream::IOStream, debug=true)
+    pwrite(stream, "iter $it:", debug)
+    pwrite(stream, "x = $x", debug)
+    pwrite(stream, "", debug)
+    
+    if status == 1
+        pwrite(stream, "| Solucao otima obtida:", debug)
+        pwrite(stream, "| ---------------------", debug)
+        pwrite(stream, "| x = $x", debug)
+        pwrite(stream, "| z = $z", debug)
+        pwrite(stream, "| status = $status", debug)
+        pwrite(stream, "")
+    elseif status == -1
+        pwrite(stream, "| Solucao ilimitada obtida:", debug)
+        pwrite(stream, "| -------------------------", debug)
+        pwrite(stream, "| x = $x", debug)
+        pwrite(stream, "| z = $z", debug)
+        pwrite(stream, "| status = $status", debug)
+        pwrite(stream, "", debug)
+    elseif status == 0 
+        pwrite(stream, "| Solucao subotima obtida:", debug)
+        pwrite(stream, "| -------------------------", debug)
+        pwrite(stream, "| x = $x", debug)
+        pwrite(stream, "| z = $z", debug)
+        pwrite(stream, "| status = $status", debug)
+        pwrite(stream, "")
+    elseif status == -2 
+        pwrite(stream, "| Problema e inviavel:", debug)
+        pwrite(stream, "| -------------------------", debug)
+        pwrite(stream, "| status = $status", debug)
+        pwrite(stream, "", debug)
+    end
+end
+
+function pwrite(stream::IOStream, string::AbstractString, debug=true)
+    if debug
+        println(string)
+    end
+    write(stream, string * "\n")
+end
+
+\end{lstlisting}
+
+% you can choose not to have a title for an appendix
+% if you want by leaving the argument blank
+%\section{}
+%Appendix two text goes here.
+
+
+% use section* for acknowledgment
+\section*{Acknowledgment}
+The authors would like to thank the University PUC-Rio for the fertile environment for research and learning, as well as the teachers and teacher assistants of the electrical engineering department.
+
+
+% Can use something like this to put references on a page
+% by themselves when using endfloat and the captionsoff option.
+\ifCLASSOPTIONcaptionsoff
+  \newpage
+\fi
+
+
+
+% trigger a \newpage just before the given reference
+% number - used to balance the columns on the last page
+% adjust value as needed - may need to be readjusted if
+% the document is modified later
+%\IEEEtriggeratref{8}
+% The "triggered" command can be changed if desired:
+%\IEEEtriggercmd{\enlargethispage{-5in}}
+
+% references section
+
+% can use a bibliography generated by BibTeX as a .bbl file
+% BibTeX documentation can be easily obtained at:
+% http://mirror.ctan.org/biblio/bibtex/contrib/doc/
+% The IEEEtran BibTeX style support page is at:
+% http://www.michaelshell.org/tex/ieeetran/bibtex/
+
+% argument is your BibTeX string definitions and bibliography database(s)
+%\bibliography{IEEEabrv,../bib/paper}
+%
+% <OR> manually copy in the resultant .bbl file
+% set second argument of \begin to the number of references
+% (used to reserve space for the reference number labels box)
+%
+%\begin{thebibliography}{1}
+%
+%	\item oi
+%\end{thebibliography}
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,mybibfile}
+% biography section
+% 
+% If you have an EPS/PDF photo (graphicx package needed) extra braces are
+% needed around the contents of the optional argument to biography to prevent
+% the LaTeX parser from getting confused when it sees the complicated
+% \includegraphics command within an optional argument. (You could create
+% your own custom macro containing the \includegraphics command to make things
+% simpler here.)
+%\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{mshell}}]{Michael Shell}
+% or if you just want to reserve a space for a photo:
+%
+%\begin{IEEEbiography}{Michael Shell}
+%Biography text here.
+%\end{IEEEbiography}
+
+% if you will not have a photo at all:
+\begin{IEEEbiographynophoto}{Guilherme Machado}
+received the BA.Sc in Electrical Engineering from, Rio de Janeiro Federal University, Rio de Janeiro, Brazil, in 2017. He also graduated at Automatized Systems Engineering at a double degree program in the French "Grand Ecole" Supélec in 2016. Currently he is pursuing a Masters degree at PUC-Rio.
+\end{IEEEbiographynophoto}
+
+% insert where needed to balance the two columns on the last page with
+% biographies
+%\newpage
+
+\begin{IEEEbiographynophoto}{Felipe Nazaré}
+received the BA.Sc in Electrical Engineering from, Rio de Janeiro Federal University, Rio de Janeiro, Brazil, in 2017. Currently he is pursuing a Masters degree at PUC-Rio.
+\end{IEEEbiographynophoto}
+
+% You can push biographies down or up by placing
+% a \vfill before or after them. The appropriate
+% use of \vfill depends on what kind of text is
+% on the last page and whether or not the columns
+% are being equalized.
+
+%\vfill
+
+% Can be used to pull up biographies so that the bottom of the last one
+% is flush with the other column.
+%\enlargethispage{-5in}
+
+
+
+% that's all folks
+\end{document}
+
+
